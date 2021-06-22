@@ -1,6 +1,10 @@
 """
-Some basic inference functions adapted from my inferno module:
+Some basic inference functions adapted from my inferno module which should be available
+here soon:
 https://github.com/nealegibson/inferno
+Really they are just rewritten versions of https://github.com/nealegibson/Infer
+But there are many other options for optimisers/MCMCs/etc, and they should (in principle)
+all do much the same job!
 
 """
 
@@ -42,7 +46,7 @@ def fopt(f,x0,var=None,args=[],min=False,**kwargs):
   x[var_ind] = fmin(wrapper,x0[var_ind],args=args,**kwargs)  
   return x 
 
-def apply_uniform_prior(logL,bounds):
+def apply_uniform_logPrior(logL,bounds):
   """
   Simple funciton decorator that takes in a log Likelihood function, and returns a log Posterior
   that is bounded according to bounds.
@@ -74,6 +78,24 @@ def apply_uniform_prior(logL,bounds):
     return logL(p,*args,**kwargs) #else return the logL
   
   return logP #return the function
+
+def uniform_logPrior(bounds):
+  """
+  same as above, but returns the logPrior directly  
+  """
+  
+  lower = np.array([t[0] if type(t) is tuple else -np.inf for t in bounds])
+  upper = np.array([t[1] if type(t) is tuple else np.inf for t in bounds])
+    
+  def log_prior(x,*args,**kwargs):
+    """
+    logPrior with simple bounds
+    """
+    if np.any(x<lower): return -np.inf
+    elif np.any(x>upper): return -np.inf
+    else: return 0.
+  
+  return log_prior
 
 def miniMCMC(f,x,x_err,burnin,chain,N=32,args=[],a=2,dlogP=50):
   """
@@ -254,3 +276,4 @@ def miniSamplePlot(X,N=None,labels=None,samples=300,x=None,left=0.07,bottom=0.07
           
   
   plt.subplots_adjust(left=left,bottom=bottom,right=right,top=top,wspace=wspace,hspace=hspace)
+
